@@ -1,4 +1,3 @@
-“use client”;
 import { useState, useEffect, useRef } from “react”;
 
 const CATEGORIES = [
@@ -14,7 +13,7 @@ const CATEGORIES = [
 
 const MONTHS = [“Jan”,“Feb”,“Mar”,“Apr”,“May”,“Jun”,“Jul”,“Aug”,“Sep”,“Oct”,“Nov”,“Dec”];
 
-function formatCurrency(amount: number) {
+function formatCurrency(amount) {
 return “₹” + Number(amount).toLocaleString(“en-IN”, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 }
 
@@ -22,8 +21,7 @@ function getWeekDates() {
 const today = new Date();
 const day = today.getDay();
 const diff = today.getDate() - day + (day === 0 ? -6 : 1);
-const monday = new Date(today);
-monday.setDate(diff);
+const monday = new Date(today.setDate(diff));
 const dates = [];
 for (let i = 0; i < 7; i++) {
 const d = new Date(monday);
@@ -33,30 +31,21 @@ dates.push(d);
 return dates;
 }
 
-interface Expense {
-id: number;
-amount: number;
-description: string;
-category: string;
-date: string;
-createdAt: string;
-}
-
-export default function Page() {
-const [expenses, setExpenses] = useState<Expense[]>([]);
+function ExpenseTracker() {
+const [expenses, setExpenses] = useState([]);
 const [showAdd, setShowAdd] = useState(false);
 const [amount, setAmount] = useState(””);
 const [description, setDescription] = useState(””);
 const [selectedCat, setSelectedCat] = useState(0);
 const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split(“T”)[0]);
 const [view, setView] = useState(“dashboard”);
-const [editingId, setEditingId] = useState<number | null>(null);
+const [editingId, setEditingId] = useState(null);
 const [filterCat, setFilterCat] = useState(“All”);
 const [budget, setBudget] = useState(30000);
 const [showBudgetEdit, setShowBudgetEdit] = useState(false);
 const [tempBudget, setTempBudget] = useState(“30000”);
 const [animateIn, setAnimateIn] = useState(false);
-const inputRef = useRef<HTMLInputElement>(null);
+const inputRef = useRef(null);
 
 useEffect(() => {
 setAnimateIn(true);
@@ -97,7 +86,7 @@ isToday: dateStr === new Date().toISOString().split(“T”)[0],
 const maxWeekDay = Math.max(…weekData.map((d) => d.total), 1);
 
 const handleAdd = () => {
-if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) return;
+if (!amount || isNaN(amount) || Number(amount) <= 0) return;
 if (editingId !== null) {
 setExpenses((prev) =>
 prev.map((e) =>
@@ -108,7 +97,7 @@ e.id === editingId
 );
 setEditingId(null);
 } else {
-const newExpense: Expense = {
+const newExpense = {
 id: Date.now(),
 amount: Number(amount),
 description: description || CATEGORIES[selectedCat].name,
@@ -125,7 +114,7 @@ setSelectedDate(new Date().toISOString().split(“T”)[0]);
 setShowAdd(false);
 };
 
-const handleEdit = (expense: Expense) => {
+const handleEdit = (expense) => {
 setAmount(String(expense.amount));
 setDescription(expense.description);
 setSelectedCat(CATEGORIES.findIndex((c) => c.name === expense.category));
@@ -134,13 +123,13 @@ setEditingId(expense.id);
 setShowAdd(true);
 };
 
-const handleDelete = (id: number) => {
+const handleDelete = (id) => {
 setExpenses((prev) => prev.filter((e) => e.id !== id));
 };
 
 const filteredExpenses = filterCat === “All”
-? […expenses].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-: […expenses].filter((e) => e.category === filterCat).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+? […expenses].sort((a, b) => new Date(b.date) - new Date(a.date))
+: […expenses].filter((e) => e.category === filterCat).sort((a, b) => new Date(b.date) - new Date(a.date));
 
 const todayExpenses = expenses.filter((e) => e.date === new Date().toISOString().split(“T”)[0]);
 const todayTotal = todayExpenses.reduce((s, e) => s + e.amount, 0);
@@ -156,13 +145,14 @@ margin: “0 auto”,
 position: “relative”,
 overflow: “hidden”,
 }}>
-{/* eslint-disable-next-line @next/next/no-page-custom-font */}
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
 
 ```
+  {/* Ambient background orbs */}
   <div style={{ position: "fixed", top: "-120px", right: "-80px", width: "300px", height: "300px", borderRadius: "50%", background: "radial-gradient(circle, rgba(78,205,196,0.08) 0%, transparent 70%)", pointerEvents: "none" }} />
   <div style={{ position: "fixed", bottom: "-100px", left: "-60px", width: "250px", height: "250px", borderRadius: "50%", background: "radial-gradient(circle, rgba(167,139,250,0.06) 0%, transparent 70%)", pointerEvents: "none" }} />
 
+  {/* Header */}
   <div style={{
     padding: "20px 24px 16px",
     opacity: animateIn ? 1 : 0,
@@ -189,8 +179,9 @@ overflow: “hidden”,
     </div>
   </div>
 
+  {/* Navigation */}
   <div style={{
-    display: "flex", gap: "6px", padding: "0 24px 16px",
+    display: "flex", gap: "6px", padding: "0 24px 16px", 
     opacity: animateIn ? 1 : 0, transition: "all 0.6s 0.1s cubic-bezier(0.16, 1, 0.3, 1)",
   }}>
     {[
@@ -199,7 +190,7 @@ overflow: “hidden”,
       { key: "insights", label: "Insights", icon: "💡" },
     ].map((tab) => (
       <button key={tab.key} onClick={() => setView(tab.key)} style={{
-        flex: 1, padding: "10px 8px", borderRadius: "12px",
+        flex: 1, padding: "10px 8px", borderRadius: "12px", border: "none",
         background: view === tab.key ? "rgba(78,205,196,0.15)" : "rgba(255,255,255,0.03)",
         color: view === tab.key ? "#4ECDC4" : "#6B7280",
         fontSize: "12px", fontWeight: 600, cursor: "pointer",
@@ -213,10 +204,13 @@ overflow: “hidden”,
     ))}
   </div>
 
+  {/* Main Content Area */}
   <div style={{ padding: "0 24px 120px", opacity: animateIn ? 1 : 0, transition: "all 0.6s 0.2s cubic-bezier(0.16, 1, 0.3, 1)" }}>
 
+    {/* === DASHBOARD VIEW === */}
     {view === "dashboard" && (
       <>
+        {/* Budget Card */}
         <div style={{
           background: "linear-gradient(135deg, rgba(78,205,196,0.1) 0%, rgba(167,139,250,0.08) 100%)",
           borderRadius: "20px", padding: "24px",
@@ -244,6 +238,7 @@ overflow: “hidden”,
             </div>
           </div>
 
+          {/* Progress bar */}
           <div style={{ position: "relative", height: "8px", background: "rgba(255,255,255,0.06)", borderRadius: "4px", overflow: "hidden" }}>
             <div style={{
               height: "100%", borderRadius: "4px",
@@ -259,6 +254,7 @@ overflow: “hidden”,
           </div>
         </div>
 
+        {/* Today's Spending */}
         <div style={{
           background: "rgba(255,255,255,0.03)",
           borderRadius: "16px", padding: "18px 20px",
@@ -267,7 +263,7 @@ overflow: “hidden”,
           display: "flex", justifyContent: "space-between", alignItems: "center",
         }}>
           <div>
-            <p style={{ fontSize: "11px", color: "#6B7280", margin: 0, textTransform: "uppercase", letterSpacing: "1px" }}>Today&apos;s Spending</p>
+            <p style={{ fontSize: "11px", color: "#6B7280", margin: 0, textTransform: "uppercase", letterSpacing: "1px" }}>Today's Spending</p>
             <p style={{ fontSize: "24px", fontWeight: 700, margin: "4px 0 0", fontFamily: "'Space Mono', monospace" }}>
               {formatCurrency(todayTotal)}
             </p>
@@ -277,6 +273,7 @@ overflow: “hidden”,
           </div>
         </div>
 
+        {/* Weekly Chart */}
         <div style={{
           background: "rgba(255,255,255,0.03)", borderRadius: "16px", padding: "20px",
           border: "1px solid rgba(255,255,255,0.05)", marginBottom: "16px",
@@ -306,6 +303,7 @@ overflow: “hidden”,
           </div>
         </div>
 
+        {/* Category Breakdown */}
         {categoryTotals.length > 0 && (
           <div style={{
             background: "rgba(255,255,255,0.03)", borderRadius: "16px", padding: "20px",
@@ -340,9 +338,10 @@ overflow: “hidden”,
           </div>
         )}
 
+        {/* Recent Transactions */}
         {todayExpenses.length > 0 && (
           <div>
-            <p style={{ fontSize: "13px", fontWeight: 600, margin: "0 0 12px", color: "#9CA3AF" }}>Today&apos;s Transactions</p>
+            <p style={{ fontSize: "13px", fontWeight: 600, margin: "0 0 12px", color: "#9CA3AF" }}>Today's Transactions</p>
             {todayExpenses.map((exp) => {
               const cat = CATEGORIES.find((c) => c.name === exp.category);
               return (
@@ -383,12 +382,13 @@ overflow: “hidden”,
       </>
     )}
 
+    {/* === HISTORY VIEW === */}
     {view === "history" && (
       <>
         <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "16px" }}>
           {["All", ...CATEGORIES.map((c) => c.name)].map((cat) => (
             <button key={cat} onClick={() => setFilterCat(cat)} style={{
-              padding: "6px 14px", borderRadius: "20px",
+              padding: "6px 14px", borderRadius: "20px", border: "none",
               background: filterCat === cat ? "rgba(78,205,196,0.15)" : "rgba(255,255,255,0.04)",
               color: filterCat === cat ? "#4ECDC4" : "#6B7280",
               fontSize: "11px", fontWeight: 600, cursor: "pointer",
@@ -396,7 +396,7 @@ overflow: “hidden”,
               border: filterCat === cat ? "1px solid rgba(78,205,196,0.2)" : "1px solid transparent",
               transition: "all 0.2s ease",
             }}>
-              {cat === "All" ? "All" : (CATEGORIES.find((c) => c.name === cat)?.icon + " " + cat)}
+              {cat === "All" ? "All" : CATEGORIES.find((c) => c.name === cat)?.icon + " " + cat}
             </button>
           ))}
         </div>
@@ -454,11 +454,13 @@ overflow: “hidden”,
       </>
     )}
 
+    {/* === INSIGHTS VIEW === */}
     {view === "insights" && (
       <>
+        {/* Stats Cards */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "16px" }}>
           {[
-            { label: "Total Transactions", value: String(monthExpenses.length), color: "#4ECDC4" },
+            { label: "Total Transactions", value: monthExpenses.length, color: "#4ECDC4" },
             { label: "Avg per Transaction", value: monthExpenses.length > 0 ? formatCurrency(totalSpent / monthExpenses.length) : "₹0", color: "#A78BFA" },
             { label: "Daily Average", value: formatCurrency(totalSpent / new Date().getDate()), color: "#FBBF24" },
             { label: "Biggest Expense", value: monthExpenses.length > 0 ? formatCurrency(Math.max(...monthExpenses.map((e) => e.amount))) : "₹0", color: "#FF6B6B" },
@@ -475,6 +477,7 @@ overflow: “hidden”,
           ))}
         </div>
 
+        {/* Top Category */}
         {categoryTotals.length > 0 && (
           <div style={{
             background: `linear-gradient(135deg, ${categoryTotals[0].color}15, ${categoryTotals[0].color}05)`,
@@ -495,13 +498,17 @@ overflow: “hidden”,
           </div>
         )}
 
+        {/* Budget Health */}
         <div style={{
           background: "rgba(255,255,255,0.03)", borderRadius: "16px", padding: "20px",
           border: "1px solid rgba(255,255,255,0.05)", marginBottom: "16px",
         }}>
           <p style={{ fontSize: "13px", fontWeight: 600, margin: "0 0 12px", color: "#9CA3AF" }}>Budget Health</p>
           <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-            <div style={{ fontSize: "36px" }}>
+            <div style={{
+              fontSize: "36px",
+              filter: percentSpent > 90 ? "none" : "none",
+            }}>
               {percentSpent > 90 ? "🔴" : percentSpent > 70 ? "🟡" : "🟢"}
             </div>
             <div>
@@ -519,12 +526,14 @@ overflow: “hidden”,
           </div>
         </div>
 
+        {/* Category Distribution */}
         {categoryTotals.length > 0 && (
           <div style={{
             background: "rgba(255,255,255,0.03)", borderRadius: "16px", padding: "20px",
             border: "1px solid rgba(255,255,255,0.05)",
           }}>
             <p style={{ fontSize: "13px", fontWeight: 600, margin: "0 0 14px", color: "#9CA3AF" }}>Category Distribution</p>
+            {/* Stacked bar */}
             <div style={{ display: "flex", height: "12px", borderRadius: "6px", overflow: "hidden", marginBottom: "14px" }}>
               {categoryTotals.map((cat, i) => (
                 <div key={i} style={{
@@ -557,6 +566,7 @@ overflow: “hidden”,
     )}
   </div>
 
+  {/* FAB - Add Button */}
   <button onClick={() => { setEditingId(null); setAmount(""); setDescription(""); setSelectedCat(0); setSelectedDate(new Date().toISOString().split("T")[0]); setShowAdd(true); }} style={{
     position: "fixed", bottom: "28px", right: "50%", transform: "translateX(50%)",
     width: "60px", height: "60px", borderRadius: "20px",
@@ -571,6 +581,7 @@ overflow: “hidden”,
     +
   </button>
 
+  {/* Add/Edit Modal */}
   {showAdd && (
     <div style={{
       position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)",
@@ -583,11 +594,13 @@ overflow: “hidden”,
         border: "1px solid rgba(255,255,255,0.08)",
         borderBottom: "none",
       }}>
+        {/* Handle */}
         <div style={{ width: "36px", height: "4px", borderRadius: "2px", background: "rgba(255,255,255,0.15)", margin: "0 auto 20px" }} />
         <h2 style={{ fontSize: "20px", fontWeight: 700, margin: "0 0 20px" }}>
           {editingId ? "Edit Expense" : "Add Expense"}
         </h2>
 
+        {/* Amount */}
         <div style={{ marginBottom: "16px" }}>
           <label style={{ fontSize: "11px", color: "#6B7280", textTransform: "uppercase", letterSpacing: "1px", fontWeight: 600 }}>Amount (₹)</label>
           <input ref={inputRef} type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0"
@@ -599,6 +612,7 @@ overflow: “hidden”,
           />
         </div>
 
+        {/* Description */}
         <div style={{ marginBottom: "16px" }}>
           <label style={{ fontSize: "11px", color: "#6B7280", textTransform: "uppercase", letterSpacing: "1px", fontWeight: 600 }}>Description</label>
           <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="What did you spend on?"
@@ -610,6 +624,7 @@ overflow: “hidden”,
           />
         </div>
 
+        {/* Date */}
         <div style={{ marginBottom: "16px" }}>
           <label style={{ fontSize: "11px", color: "#6B7280", textTransform: "uppercase", letterSpacing: "1px", fontWeight: 600 }}>Date</label>
           <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)}
@@ -622,12 +637,13 @@ overflow: “hidden”,
           />
         </div>
 
+        {/* Category */}
         <div style={{ marginBottom: "20px" }}>
           <label style={{ fontSize: "11px", color: "#6B7280", textTransform: "uppercase", letterSpacing: "1px", fontWeight: 600 }}>Category</label>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px", marginTop: "10px" }}>
             {CATEGORIES.map((cat, i) => (
               <button key={i} onClick={() => setSelectedCat(i)} style={{
-                padding: "10px 4px", borderRadius: "12px",
+                padding: "10px 4px", borderRadius: "12px", border: "none",
                 background: selectedCat === i ? `${cat.color}20` : "rgba(255,255,255,0.03)",
                 border: selectedCat === i ? `1.5px solid ${cat.color}40` : "1.5px solid transparent",
                 cursor: "pointer", transition: "all 0.2s ease",
@@ -642,6 +658,7 @@ overflow: “hidden”,
           </div>
         </div>
 
+        {/* Actions */}
         <div style={{ display: "flex", gap: "10px" }}>
           <button onClick={() => setShowAdd(false)} style={{
             flex: 1, padding: "14px", borderRadius: "14px",
@@ -662,6 +679,7 @@ overflow: “hidden”,
     </div>
   )}
 
+  {/* Budget Edit Modal */}
   {showBudgetEdit && (
     <div style={{
       position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)",
@@ -702,3 +720,5 @@ overflow: “hidden”,
 
 );
 }
+
+export default ExpenseTracker;
